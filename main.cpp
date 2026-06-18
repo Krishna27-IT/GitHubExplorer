@@ -13,18 +13,17 @@ size_t WriteCallback(void* contents,size_t size,size_t nmemb,string* output){
 
 int main(){
     string username;
-    cout << "Enter Username: ";
+    cout<<"\nEnter Username: ";
     getline(cin, username);
 
-    string url =
-    "https://api.github.com/users/" + username;
+    string url="https://api.github.com/users/" + username;
 
-    cout << url << endl;
+    cout<<url<<endl;
 
     CURL* curl = curl_easy_init();
 
     if(!curl){
-        cout << "Failed to initialize CURL\n";
+        cout<<"Failed to initialize CURL\n";
         return 1;
     }
 
@@ -41,11 +40,34 @@ int main(){
     CURLcode result = curl_easy_perform(curl);
 
     if(result != CURLE_OK){
-    cout << curl_easy_strerror(result) << endl;
+    cout<<"\nNetwork Error: "<<curl_easy_strerror(result)<<endl;
+    return 1;
     }else{
         json data = json::parse(response);
 
-        cout<<"Name: "<<data["name"]<<endl;
+        if(data.contains("message") && data["message"] == "Not Found"){
+            cout<<"\nUser not found!\n";
+            return 1;
+        }
+        cout<<"\n===== USER INFO =====\n";
+
+        cout<<"Name: "<< data["name"].get<string>()<<endl;
+
+        cout<<"Username: "<<data["login"].get<string>()<<endl;
+
+        cout<<"Followers: "<<data["followers"].get<int>()<<endl;
+
+        cout<<"Following: "<<data["following"].get<int>()<<endl;
+
+        cout<<"Public Repositories: "<<data["public_repos"].get<int>()<<endl;
+
+        if(data["location"].is_null()){
+            cout<<"Location: N/A\n";
+        } else {
+            cout<<"Location: "<<data["location"].get<string>()<<endl;
+        }
+
+        cout<<"Profile URL: "<<data["html_url"].get<string>()<<endl;
     }
 
     curl_easy_cleanup(curl);
